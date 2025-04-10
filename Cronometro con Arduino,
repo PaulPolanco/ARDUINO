@@ -1,0 +1,68 @@
+const int bInicio=11, bParar=10, ledV=4, ledR=2;
+unsigned long tInicio=0, tActual=0; 
+unsigned long ultMin=0, ultParpadeo=0, tAlertaledR=0;
+boolean CActivo = false, estLedV = false,minAvisado = false;
+
+void setup(){
+  Serial.begin(9600);
+  pinMode(bInicio, INPUT);
+  pinMode(bParar, INPUT);
+  pinMode(ledV, OUTPUT);
+  pinMode(ledR, OUTPUT);
+  digitalWrite(ledV, LOW);
+  digitalWrite(ledR, LOW); 
+  Serial.println("Presiona 1 para Iniciar/reset, 2 para mostrar tiempo");
+}
+void loop(){
+  if (digitalRead(bInicio) == HIGH && !CActivo) {
+    delay(50);
+    if (digitalRead(bInicio) == HIGH) {
+      CActivo = true;
+      tInicio = millis();
+      digitalWrite(ledR, LOW);
+      Serial.println("Cronómetro iniciado");
+      delay(50);
+    }
+  }
+  if (digitalRead(bParar) == HIGH && CActivo) {
+    delay(50); 
+    if (digitalRead(bParar) == HIGH) {
+      CActivo = false;
+      tActual = millis();
+      digitalWrite(ledV, LOW);
+      digitalWrite(ledR, HIGH);
+      mostrarTiempo(tActual - tInicio);
+      delay(50); 
+    }
+  }
+  if (CActivo) {
+    unsigned long tTranscurrido = millis() - tInicio;
+    if (millis() - ultParpadeo >= 500) {
+      ultParpadeo = millis();
+      estLedV = !estLedV;
+      digitalWrite(ledV, estLedV);
+    }
+
+    unsigned long minActuales=tTranscurrido/60000;
+    if (minActuales > ultMin) {
+      ultMin = minActuales;
+      digitalWrite(ledR, HIGH);         
+      tAlertaledR = millis();         
+      minAvisado = true;
+    }
+  }
+}
+void mostrarTiempo(unsigned long tiempoTranscurrido) {
+  int horas = tiempoTranscurrido / 3600000;
+  int minutos = (tiempoTranscurrido % 3600000) / 60000;
+  int segundos = (tiempoTranscurrido % 60000) / 1000;
+
+  if (horas < 10) Serial.print("0");
+  Serial.print(horas);
+  Serial.print(":");
+  if (minutos < 10) Serial.print("0");
+  Serial.print(minutos);
+  Serial.print(":");
+  if (segundos < 10) Serial.print("0");
+  Serial.println(segundos);
+}
